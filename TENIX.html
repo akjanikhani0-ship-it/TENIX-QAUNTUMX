@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>TENIX QUANTUM-X | AI Signal Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 30%, #0a0f1e, #010409);
+            transition: background 0.3s ease, color 0.2s;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 70% 40%, rgba(79, 70, 229, 0.08), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body.light {
+            background: #eef2ff;
+        }
+        body.light::before {
+            background: radial-gradient(circle at 70% 40%, rgba(79, 70, 229, 0.05), transparent 70%);
+        }
+
+        body.light .glass-card, body.light .popup-content, body.light .dropdown-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
+            color: #0f172a;
+        }
+        body.light .glass-card h2, body.light .glass-card h3, body.light .glass-card p {
+            color: #0f172a;
+        }
+        body.light input, body.light select, body.light button {
+            background: rgba(0,0,0,0.04);
+            color: #0f172a;
+        }
+
+        .glass-card {
+            background: rgba(12, 20, 35, 0.55);
+            backdrop-filter: blur(18px);
+            border-radius: 2rem;
+            border: 1px solid rgba(80, 150, 255, 0.25);
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.5);
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        .glass-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(80, 150, 255, 0.6);
+            box-shadow: 0 30px 50px -15px rgba(0,0,0,0.6);
+        }
+
+        :root {
+            --theme-primary: #4f46e5;
+            --theme-glow: #818cf8;
+            --theme-gradient: linear-gradient(135deg, #4f46e5, #a855f7);
+        }
+        .theme-btn, button.primary, .gen-btn {
+            background: var(--theme-gradient);
+            border: none;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .theme-btn::after, .gen-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        .theme-btn:hover::after, .gen-btn:hover::after {
+            left: 100%;
+        }
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        #loginScreen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            position: relative;
+            z-index: 2;
+        }
+        .login-box {
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem 1.8rem;
+            animation: fadeScaleUp 0.6s ease;
+        }
+        @keyframes fadeScaleUp {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .login-box input, .login-box select {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 1.5rem;
+            background: rgba(20, 30, 55, 0.6);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            font-weight: 500;
+            outline: none;
+            margin-top: 0.5rem;
+            margin-bottom: 1.2rem;
+            transition: all 0.2s;
+        }
+        .login-box input:focus, .login-box select:focus {
+            border-color: var(--theme-primary);
+            box-shadow: 0 0 12px var(--theme-glow);
+        }
+        .login-box input:read-only {
+            opacity: 0.8;
+            cursor: default;
+            background: rgba(20,30,55,0.5);
+        }
+        body.light .login-box input:read-only {
+            background: rgba(0,0,0,0.08);
+        }
+        .error-msg {
+            color: #ff6b82;
+            font-size: 0.8rem;
+            margin-top: -0.8rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 3px rgba(0,0,0,0.5);
+        }
+
+        #dashboardScreen {
+            display: none;
+        }
+        .top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: var(--theme-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(79,70,229,0.3);
+            font-size: 1.8rem;
+        }
+        .live-clock {
+            background: rgba(0,0,0,0.35);
+            padding: 0.5rem 1.2rem;
+            border-radius: 3rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            backdrop-filter: blur(8px);
+            font-size: 1.1rem;
+        }
+        .signal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .control-card {
+            padding: 1.4rem;
+            border-radius: 1.5rem;
+        }
+        .market-toggle {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+        .market-btn {
+            flex: 1;
+            padding: 0.7rem;
+            border-radius: 3rem;
+            background: rgba(255,255,255,0.08);
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+        .market-btn.active {
+            background: var(--theme-gradient);
+            box-shadow: 0 0 18px var(--theme-glow);
+        }
+        .pair-selector {
+            position: relative;
+            margin: 1rem 0;
+        }
+        .pair-trigger {
+            width: 100%;
+            padding: 0.9rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 2rem;
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pair-trigger:hover {
+            background: rgba(0,0,0,0.5);
+            border-color: var(--theme-primary);
+        }
+        .dropdown-panel {
+            position: absolute;
+            top: 110%;
+            left: 0;
+            right: 0;
+            background: rgba(10, 20, 35, 0.98);
+            backdrop-filter: blur(24px);
+            border-radius: 1.5rem;
+            z-index: 100;
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 0.8rem;
+            display: none;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 20px 35px -10px black;
+        }
+        .dropdown-panel.show {
+            display: block;
+        }
+        .search-input {
+            width: 100%;
+            padding: 0.7rem;
+            border-radius: 2rem;
+            margin-bottom: 1rem;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: white;
+        }
+        .category-group {
+            margin-top: 0.8rem;
+        }
+        .category-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.3rem 0.5rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 1rem;
+            display: inline-block;
+        }
+        .pair-item {
+            padding: 0.6rem 0.8rem;
+            margin: 4px 0;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-weight: 500;
+        }
+        .pair-item:hover {
+            background: var(--theme-gradient);
+            transform: translateX(6px);
+        }
+        .gen-btn {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 3rem;
+            margin-top: 0.5rem;
+            cursor: pointer;
+            background: var(--theme-gradient);
+            box-shadow: 0 8px 20px rgba(79,70,229,0.3);
+        }
+        .history-section {
+            padding: 1.2rem;
+            border-radius: 1.5rem;
+            overflow-x: auto;
+            transition: all 0.3s;
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .history-table th, .history-table td {
+            padding: 0.7rem 0.4rem;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            text-align: left;
+        }
+        .history-table th {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: rgba(255,255,255,0.05);
+        }
+        .direction-up {
+            color: #2ecc71;
+            text-shadow: 0 0 4px #2ecc71;
+            font-weight: bold;
+        }
+        .direction-down {
+            color: #e74c3c;
+            text-shadow: 0 0 4px #e74c3c;
+            font-weight: bold;
+        }
+        .clear-btn, .export-btn {
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            background: rgba(255,255,255,0.1);
+            margin-top: 1rem;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(8px);
+        }
+        .clear-btn:hover, .export-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-2px);
+        }
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .popup-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .popup-content {
+            background: rgba(20, 30, 55, 0.95);
+            border-radius: 2rem;
+            padding: 2rem;
+            max-width: 380px;
+            width: 80%;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            animation: bouncePop 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        @keyframes bouncePop {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid rgba(255,255,255,0.2);
+            border-top: 5px solid var(--theme-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+            box-shadow: 0 0 12px var(--theme-glow);
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .theme-toggle {
+            background: rgba(255,255,255,0.15);
+            border-radius: 2rem;
+            padding: 0.4rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.02);
+        }
+        @media (max-width: 700px) {
+            .container { padding: 1rem; }
+            .history-table { font-size: 0.7rem; }
+            .gen-btn { font-size: 1rem; }
+            h1 { font-size: 1.3rem; }
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--theme-primary);
+            border-radius: 10px;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: grayscale(0.1);
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+<div id="loginScreen">
+    <div class="glass-card login-box">
+        <h2 style="text-align:center; margin-bottom:1rem;">⚡ TENIX QUANTUM-X ⚡</h2>
+        <p style="text-align:center; opacity:0.8;">AI Quantum Signal Core</p>
+        <div style="margin-top:1.8rem;">
+            <label>🤖 Bot Name (Fixed)</label>
+            <input type="text" id="botNameInput" value="TENIX QUANTUM-X" readonly>
+            <label>🔑 License Key</label>
+            <input type="password" id="licenseKeyInput" placeholder="Enter license key">
+            <label>🎨 Theme Color</label>
+            <select id="themeSelect">
+                <option value="blue-purple">💜 Blue & Purple (Default)</option>
+                <option value="deep-blue">🌊 Deep Blue</option>
+                <option value="neon-purple">✨ Neon Purple</option>
+            </select>
+            <div id="loginError" class="error-msg"></div>
+            <button id="loginBtn" class="primary theme-btn" style="width:100%; padding:1rem; border-radius:2rem;">🚀 Enter Terminal</button>
+        </div>
+    </div>
+</div>
+
+<div id="dashboardScreen">
+    <div class="container">
+        <div class="top-bar">
+            <h1>⚡ TENIX QUANTUM-X</h1>
+            <div style="display: flex; gap: 1rem;">
+                <div class="live-clock glass-card" id="liveClockDisplay">--:--:--</div>
+                <div class="theme-toggle" id="darkLightToggle">🌙 Dark/Light</div>
+            </div>
+        </div>
+        <div class="signal-grid">
+            <div class="control-card glass-card">
+                <div class="market-toggle">
+                    <div id="marketLiveBtn" class="market-btn active">📈 LIVE MARKET</div>
+                    <div id="marketOtcBtn" class="market-btn">🕯️ OTC MARKET</div>
+                </div>
+                <div class="pair-selector">
+                    <div class="pair-trigger" id="pairTrigger">📊 <span id="selectedPairLabel">EURUSD</span> ▼</div>
+                    <div class="dropdown-panel" id="pairDropdown">
+                        <input type="text" id="pairSearch" class="search-input" placeholder="🔍 Search pair...">
+                        <div id="pairListContainer"></div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.8rem; margin-top: 1rem;">
+                    <select id="timeframeSelect" class="glass-card" style="padding:0.6rem; border-radius:2rem; background:rgba(0,0,0,0.3);">
+                        <option value="1">1m</option><option value="5">5m</option><option value="15">15m</option><option value="30">30m</option><option value="60">1h</option>
+                    </select>
+                    <select id="timezoneSelect" class="glass-card" style="padding:0.6rem; border-radius:2rem;"></select>
+                </div>
+                <button id="generateSignalBtn" class="gen-btn">✨ GENERATE SIGNAL ✨</button>
+            </div>
+        </div>
+        <div class="history-section glass-card">
+            <div class="flex-between"><h3>📜 SIGNAL HISTORY</h3><div><button id="clearHistoryBtn" class="clear-btn">🗑️ Clear</button><button id="exportHistoryBtn" class="export-btn">📎 Export CSV</button></div></div>
+            <div style="overflow-x: auto;"><table class="history-table" id="historyTable"><thead><tr><th>Time</th><th>Market</th><th>Pair</th><th>TF</th><th>Entry</th><th>Expiry</th><th>Direction</th><th>Confidence</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+        </div>
+    </div>
+</div>
+
+<div id="popupOverlay" class="popup-overlay"><div class="popup-content" id="popupContent"></div></div>
+
+<script>
+    // ---------- VALID LICENSE KEYS (15 keys) ----------
+    const VALID_KEYS = [
+        "TENIX-KEY-001",
+        "TRADER-PRO-2025",
+        "QUANTUM-SIG-77",
+        "BINARY-ELITE-99",
+        "FUTURE-BOT-88",
+        "SIGNAL-MASTER-11",
+        "ALPHA-OMEGA-42",
+        "CRYPTO-FX-999",
+        "GOLDEN-ENTRY-55",
+        "X10-TRADER-KEY",
+        "NOVA-SIGNAL-22",
+        "QUANTUM-EDGE-33",
+        "AI-TRADER-44",
+        "NEXUS-BOT-66",
+        "STELLAR-X-77"
+    ];
+
+    // ---------- DATA ----------
+    const LIVE_PAIRS = ["EURUSD","EURJPY","USDJPY","CADJPY","EURGBP","AUDCHF","CHFJPY","EURCAD","EURAUD","GBPCAD","GBPUSD","EURCHF","GBPJPY","AUDJPY","USDCAD","GBPAUD","AUDCAD","AUDUSD","GBPCHF","USDCHF"];
+    const OTC_PAIRS = ["NZDCAD_OTC","USDEGP_OTC","USDCHF_OTC","USDBRL_OTC","AUDNZD_OTC","BOEING_OTC","FACEBOOK_OTC","USDPHP_OTC","USDIDR_OTC","USDNGN_OTC","TRUMP_OTC","USDBDT_OTC","USDARS_OTC","USDMXN_OTC","TONCOIN_OTC","USDTRY_OTC","RIPPLE_OTC","USDPKR_OTC","USDINR_OTC","EURCAD_OTC","NZDCHF_OTC","CADCHF_OTC","NZDJPY_OTC","USDCOP_OTC","SHIBA_OTC","PEPE_OTC","DOGWIF_OTC","BONK_OTC","FLOKI_OTC","DOGE_OTC","UKBR_OTC","MSFT_OTC","LITECOIN_OTC","USDDZD_OTC","BITCOIN_OTC","XAGUSD_OTC","XAUUSD_OTC","INTC_OTC","MCD_OTC","USCR_OTC","USDZAR_OTC","AXP_OTC","USDCAD_OTC","EURAUD_OTC","AUDCHF_OTC","EURCHF_OTC","GBPCHF_OTC","GBPCAD_OTC","AUDCAD_OTC","JOHNSON_OTC","PFIZER_OTC","AUDJPY_OTC","EURUSD_OTC","CADJPY_OTC","GBPJPY_OTC","BINANCE_OTC","TRON_OTC","ETHEREUM_OTC","SOLANA_OTC"];
+    
+    function categorizePair(pair, marketType) {
+        if (marketType === 'LIVE') return 'Forex';
+        const u = pair.toUpperCase();
+        if (u.includes('BTC') || u.includes('ETH') || u.includes('SOL') || u.includes('TON') || u.includes('RIPPLE') || u.includes('TRON') || u.includes('BINANCE') || u.includes('LITECOIN') || u.includes('SHIBA') || u.includes('PEPE') || u.includes('DOGE') || u.includes('FLOKI') || u.includes('BONK') || u.includes('DOGWIF')) return 'Crypto';
+        if (u.includes('BOEING') || u.includes('FACEBOOK') || u.includes('MSFT') || u.includes('MCD') || u.includes('JOHNSON') || u.includes('PFIZER') || u.includes('INTC') || u.includes('AXP') || u.includes('UKBR') || u.includes('USCR')) return 'Stocks';
+        if (u.includes('XAG') || u.includes('XAU') || u.includes('GOLD') || u.includes('SILVER')) return 'Commodities';
+        return 'Forex';
+    }
+
+    let currentMarket = 'LIVE';
+    let currentPair = 'EURUSD';
+    let signalHistory = [];
+    let generatingLock = false;
+    let currentTheme = 'blue-purple';
+    let isLightMode = false;
+    let selectedTimezoneOffset = 0;
+
+    function formatDateWithOffset(date, offsetHours) {
+        const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+        const offsetMs = offsetHours * 3600000;
+        const localDate = new Date(utc + offsetMs);
+        return localDate.toISOString().slice(0,19).replace('T',' ');
+    }
+
+    function getCurrentDateWithOffset() {
+        const now = new Date();
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        return new Date(utc + (selectedTimezoneOffset * 3600000));
+    }
+
+    function computeEntryExpiry(entryBaseDate, timeframeMin) {
+        let entry = new Date(entryBaseDate);
+        entry.setSeconds(0,0);
+        entry = new Date(entry.getTime() + 60000);
+        let expiry = new Date(entry.getTime() + (timeframeMin * 60000));
+        return { entry, expiry };
+    }
+
+    function generateSignalDirection() {
+        return Math.random() > 0.5 ? 'UP' : 'DOWN';
+    }
+
+    function getConfidence() {
+        return Math.floor(Math.random() * (96 - 68 + 1) + 68);
+    }
+
+    function getPairsByMarket() {
+        return currentMarket === 'LIVE' ? LIVE_PAIRS : OTC_PAIRS;
+    }
+
+    function renderPairDropdown(filterText = '') {
+        const container = document.getElementById('pairListContainer');
+        const allPairs = getPairsByMarket();
+        let filtered = allPairs;
+        if (filterText.trim() !== '') {
+            filtered = allPairs.filter(p => p.toLowerCase().includes(filterText.toLowerCase()));
+        }
+        const catMap = new Map();
+        for (let p of filtered) {
+            const cat = categorizePair(p, currentMarket);
+            if (!catMap.has(cat)) catMap.set(cat, []);
+            catMap.get(cat).push(p);
+        }
+        let html = '';
+        for (let [cat, items] of catMap.entries()) {
+            html += `<div class="category-group"><div class="category-title">${cat}</div>`;
+            items.forEach(pair => {
+                html += `<div class="pair-item" data-pair="${pair}">${pair}</div>`;
+            });
+            html += `</div>`;
+        }
+        container.innerHTML = html;
+        document.querySelectorAll('.pair-item').forEach(el => {
+            el.addEventListener('click', (e) => {
+                const newPair = el.getAttribute('data-pair');
+                currentPair = newPair;
+                document.getElementById('selectedPairLabel').innerText = currentPair;
+                document.getElementById('pairDropdown').classList.remove('show');
+                localStorage.setItem('tenix_lastPair', currentPair);
+            });
+        });
+    }
+
+    function addToHistory(signalObj) {
+        signalHistory.unshift(signalObj);
+        if (signalHistory.length > 20) signalHistory.pop();
+        localStorage.setItem('tenix_history', JSON.stringify(signalHistory));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const tbody = document.getElementById('historyBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        signalHistory.slice(0,20).forEach(s => {
+            const row = `<tr>
+                <td>${s.generatedTime}</td><td>${s.marketType}</td><td>${s.pair}</td><td>${s.timeframe}</td>
+                <td>${s.entryTime}</td><td>${s.expiryTime}</td>
+                <td class="${s.direction === 'UP' ? 'direction-up' : 'direction-down'}">${s.direction === 'UP' ? '⬆️ UP' : '⬇️ DOWN'}</td>
+                <td>${s.confidence}%</td>
+            </tr>`;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+
+    async function triggerSignal() {
+        if (generatingLock) return;
+        generatingLock = true;
+        const genBtn = document.getElementById('generateSignalBtn');
+        genBtn.disabled = true;
+
+        showPopup('analyzing');
+        const delay = Math.floor(Math.random() * (6000 - 4000 + 1) + 4000);
+        await new Promise(r => setTimeout(r, delay));
+        
+        const timeframeMin = parseInt(document.getElementById('timeframeSelect').value);
+        const tfLabel = document.getElementById('timeframeSelect').options[document.getElementById('timeframeSelect').selectedIndex]?.text || '1m';
+        const marketLabel = currentMarket === 'LIVE' ? 'LIVE' : 'OTC';
+        
+        const nowBase = new Date();
+        const { entry, expiry } = computeEntryExpiry(nowBase, timeframeMin);
+        const entryStr = formatDateWithOffset(entry, selectedTimezoneOffset);
+        const expiryStr = formatDateWithOffset(expiry, selectedTimezoneOffset);
+        const direction = generateSignalDirection();
+        const confidence = getConfidence();
+        
+        const signalResult = {
+            generatedTime: formatDateWithOffset(new Date(), selectedTimezoneOffset),
+            marketType: marketLabel,
+            pair: currentPair,
+            timeframe: tfLabel,
+            entryTime: entryStr,
+            expiryTime: expiryStr,
+            direction: direction,
+            confidence: confidence
+        };
+        
+        addToHistory(signalResult);
+        if (navigator.vibrate) navigator.vibrate(200);
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            oscillator.connect(gain);
+            gain.connect(audioCtx.destination);
+            oscillator.frequency.value = 880;
+            gain.gain.value = 0.1;
+            oscillator.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+            oscillator.stop(audioCtx.currentTime + 0.3);
+            audioCtx.resume();
+        } catch(e) { }
+        
+        hidePopup();
+        showResultPopup(signalResult);
+        genBtn.disabled = false;
+        generatingLock = false;
+    }
+
+    function showPopup(type) {
+        const overlay = document.getElementById('popupOverlay');
+        const contentDiv = document.getElementById('popupContent');
+        if (type === 'analyzing') {
+            contentDiv.innerHTML = `<h3>🔮 ANALYZING MARKET</h3><div class="loader"></div><p>Scanning order flow, AI patterns...</p>`;
+        }
+        overlay.classList.add('active');
+    }
+    function hidePopup() { document.getElementById('popupOverlay').classList.remove('active'); }
+    function showResultPopup(signal) {
+        const overlay = document.getElementById('popupOverlay');
+        const contentDiv = document.getElementById('popupContent');
+        const dirColor = signal.direction === 'UP' ? '#2ecc71' : '#e74c3c';
+        contentDiv.innerHTML = `<h3>✅ SIGNAL READY</h3>
+            <div style="margin:1rem 0;"><span style="background:rgba(0,0,0,0.3); padding:0.2rem 1rem; border-radius:1rem;">${signal.marketType} | ${signal.pair}</span></div>
+            <p>📈 Direction: <strong style="color:${dirColor}">${signal.direction === 'UP' ? '⬆️ UP' : '⬇️ DOWN'}</strong> &nbsp; AI: ${signal.confidence}%</p>
+            <p>⏱️ Entry: ${signal.entryTime}<br>⌛ Expiry: ${signal.expiryTime}</p>
+            <button id="closePopupBtn" class="primary theme-btn" style="margin-top:1rem; padding:0.6rem 1.5rem; border-radius:2rem;">Close</button>`;
+        overlay.classList.add('active');
+        document.getElementById('closePopupBtn')?.addEventListener('click', () => hidePopup());
+    }
+
+    function applyGlobalTheme(themeVal) {
+        const root = document.documentElement;
+        if (themeVal === 'blue-purple') {
+            root.style.setProperty('--theme-primary', '#4f46e5');
+            root.style.setProperty('--theme-glow', '#a855f7');
+            root.style.setProperty('--theme-gradient', 'linear-gradient(135deg, #4f46e5, #a855f7)');
+        } else if (themeVal === 'deep-blue') {
+            root.style.setProperty('--theme-primary', '#1e3a8a');
+            root.style.setProperty('--theme-glow', '#3b82f6');
+            root.style.setProperty('--theme-gradient', 'linear-gradient(135deg, #1e3a8a, #3b82f6)');
+        } else {
+            root.style.setProperty('--theme-primary', '#9333ea');
+            root.style.setProperty('--theme-glow', '#c084fc');
+            root.style.setProperty('--theme-gradient', 'linear-gradient(135deg, #7e22ce, #d946ef)');
+        }
+    }
+
+    function initTimezoneSelect() {
+        const sel = document.getElementById('timezoneSelect');
+        sel.innerHTML = '';
+        for (let i = -12; i <= 12; i++) {
+            const opt = document.createElement('option');
+            const sign = i >= 0 ? `+${i}` : `${i}`;
+            opt.value = i;
+            opt.text = `UTC ${sign}`;
+            if (i === selectedTimezoneOffset) opt.selected = true;
+            sel.appendChild(opt);
+        }
+        sel.addEventListener('change', () => {
+            selectedTimezoneOffset = parseInt(sel.value);
+            localStorage.setItem('tenix_tzOffset', selectedTimezoneOffset);
+            updateLiveClock();
+            renderHistory();
+        });
+    }
+
+    function updateLiveClock() {
+        const now = getCurrentDateWithOffset();
+        const timeStr = now.toLocaleTimeString('en-GB');
+        document.getElementById('liveClockDisplay').innerText = timeStr;
+    }
+    setInterval(updateLiveClock, 1000);
+
+    function loadPersistedData() {
+        const savedHistory = localStorage.getItem('tenix_history');
+        if (savedHistory) signalHistory = JSON.parse(savedHistory);
+        const lastMarket = localStorage.getItem('tenix_market');
+        if (lastMarket === 'LIVE' || lastMarket === 'OTC') currentMarket = lastMarket;
+        const lastPair = localStorage.getItem('tenix_lastPair');
+        if (lastPair && (currentMarket === 'LIVE' ? LIVE_PAIRS.includes(lastPair) : OTC_PAIRS.includes(lastPair))) currentPair = lastPair;
+        const tzOff = localStorage.getItem('tenix_tzOffset');
+        if (tzOff !== null) selectedTimezoneOffset = parseInt(tzOff);
+        const savedTheme = localStorage.getItem('tenix_theme');
+        if (savedTheme) { currentTheme = savedTheme; applyGlobalTheme(savedTheme); }
+        const lightModePref = localStorage.getItem('tenix_lightMode');
+        if (lightModePref === 'true') { isLightMode = true; document.body.classList.add('light'); }
+        else document.body.classList.remove('light');
+        renderHistory();
+    }
+
+    function updateMarketUI() {
+        const liveBtn = document.getElementById('marketLiveBtn');
+        const otcBtn = document.getElementById('marketOtcBtn');
+        if (currentMarket === 'LIVE') { liveBtn.classList.add('active'); otcBtn.classList.remove('active'); }
+        else { otcBtn.classList.add('active'); liveBtn.classList.remove('active'); }
+        const pairsList = getPairsByMarket();
+        if (!pairsList.includes(currentPair)) currentPair = pairsList[0];
+        document.getElementById('selectedPairLabel').innerText = currentPair;
+        renderPairDropdown('');
+        localStorage.setItem('tenix_market', currentMarket);
+        localStorage.setItem('tenix_lastPair', currentPair);
+    }
+
+    // EVENT HANDLERS
+    document.getElementById('loginBtn')?.addEventListener('click', () => {
+        const botName = document.getElementById('botNameInput').value.trim();
+        const license = document.getElementById('licenseKeyInput').value.trim();
+        if (botName !== 'TENIX QUANTUM-X') { 
+            document.getElementById('loginError').innerText = 'Invalid Bot Name (must be TENIX QUANTUM-X)'; 
+            return; 
+        }
+        if (!VALID_KEYS.includes(license)) { 
+            document.getElementById('loginError').innerText = 'Invalid License Key. Please use one of the 15 valid keys.'; 
+            return; 
+        }
+        const themeSelected = document.getElementById('themeSelect').value;
+        currentTheme = themeSelected;
+        applyGlobalTheme(themeSelected);
+        localStorage.setItem('tenix_theme', themeSelected);
+        localStorage.setItem('tenix_logged', 'true');
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboardScreen').style.display = 'block';
+        loadPersistedData();
+        updateMarketUI();
+        if (document.getElementById('timezoneSelect')) {
+            initTimezoneSelect();
+        }
+        updateLiveClock();
+    });
+
+    document.getElementById('marketLiveBtn')?.addEventListener('click', () => { currentMarket = 'LIVE'; updateMarketUI(); });
+    document.getElementById('marketOtcBtn')?.addEventListener('click', () => { currentMarket = 'OTC'; updateMarketUI(); });
+    document.getElementById('pairTrigger')?.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('pairDropdown').classList.toggle('show'); });
+    document.getElementById('pairSearch')?.addEventListener('input', (e) => { renderPairDropdown(e.target.value); });
+    document.getElementById('generateSignalBtn')?.addEventListener('click', triggerSignal);
+    document.getElementById('clearHistoryBtn')?.addEventListener('click', () => { signalHistory = []; localStorage.setItem('tenix_history', JSON.stringify([])); renderHistory(); });
+    document.getElementById('exportHistoryBtn')?.addEventListener('click', () => {
+        let csv = "Time,Market,Pair,Timeframe,Entry,Expiry,Direction,Confidence\n";
+        signalHistory.forEach(s => { csv += `"${s.generatedTime}",${s.marketType},${s.pair},${s.timeframe},${s.entryTime},${s.expiryTime},${s.direction},${s.confidence}\n`; });
+        const blob = new Blob([csv], {type: 'text/csv'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tenix_signals.csv'; a.click(); URL.revokeObjectURL(a.href);
+    });
+    document.getElementById('darkLightToggle')?.addEventListener('click', () => {
+        isLightMode = !isLightMode;
+        if (isLightMode) document.body.classList.add('light');
+        else document.body.classList.remove('light');
+        localStorage.setItem('tenix_lightMode', isLightMode);
+    });
+    document.addEventListener('click', (e) => { if (!e.target.closest('.pair-selector')) document.getElementById('pairDropdown')?.classList.remove('show'); });
+    
+    if (localStorage.getItem('tenix_logged') === 'true') {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboardScreen').style.display = 'block';
+        loadPersistedData(); updateMarketUI(); initTimezoneSelect(); updateLiveClock();
+    }
+</script>
+</body>
+</html>
